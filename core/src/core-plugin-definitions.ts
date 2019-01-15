@@ -1074,6 +1074,10 @@ export interface PhotosPlugin extends Plugin {
    */
   savePhoto(options?: PhotosSaveOptions): Promise<PhotosSaveResult>;
   /**
+   * Save a video the the user's photo library
+   */
+  saveVideo(options?: PhotosSaveOptions): Promise<PhotosSaveResult>;
+  /**
    * Create an album in the user's photo library
    */
   createAlbum(options: PhotosCreateAlbumOptions): Promise<void>;
