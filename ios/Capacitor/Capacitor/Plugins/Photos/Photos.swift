@@ -124,6 +124,18 @@ public class CAPPhotosPlugin : CAPPlugin {
         }
     }
     
+    PHPhotoLibrary.shared().performChanges({
+        let request = PHAssetCreationRequest.forAsset()
+        print(data)
+        request.addResource(with: .photo, fileURL: URL(string: data)!, options: nil)
+    }) { (success, error) in
+        if let error = error {
+            print(error.localizedDescription)
+        } else {
+            print("GIF has saved")
+        }
+    }
+    
     checkAuthorization(allowed: {
         // Add it to the photo library.
         PHPhotoLibrary.shared().performChanges({
@@ -143,6 +155,27 @@ public class CAPPhotosPlugin : CAPPlugin {
     }, notAllowed: {
         call.error("Access to photos not allowed by user")
     })
+    
+    
+//    checkAuthorization(allowed: {
+//        // Add it to the photo library.
+//        PHPhotoLibrary.shared().performChanges({
+//            let creationRequest = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: URL(string: data)!)
+//
+//            if let collection = targetCollection {
+//                let addAssetRequest = PHAssetCollectionChangeRequest(for: collection)
+//                addAssetRequest?.addAssets([creationRequest?.placeholderForCreatedAsset! as Any] as NSArray)
+//            }
+//        }, completionHandler: {success, error in
+//            if !success {
+//                call.error("Unable to save video to album", error)
+//            } else {
+//                call.success()
+//            }
+//        })
+//    }, notAllowed: {
+//        call.error("Access to photos not allowed by user")
+//    })
   }
     
   func checkAuthorization(allowed: @escaping () -> Void, notAllowed: @escaping () -> Void) {
