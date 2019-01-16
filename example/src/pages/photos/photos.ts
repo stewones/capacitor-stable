@@ -3,7 +3,11 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 
 import { Plugins, PhotosResult } from '@capacitor/core';
-
+import {
+  FileTransfer,
+  FileTransferObject
+} from "@ionic-native/file-transfer";
+import { File } from "@ionic-native/file";
 /**
  * Generated class for the PhotosPage page.
  *
@@ -23,8 +27,7 @@ export class PhotosPage {
   videoUrl:string = 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4';
   videoUrlPoster:string = 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg';
 
-  constructor(public navCtrl: NavController, public navParams: NavParams, public sanitizer: DomSanitizer) {
-  }
+  constructor(public navCtrl: NavController, public navParams: NavParams, public sanitizer: DomSanitizer, private fileTransfer: FileTransfer, private file: File) {}
 
   ionViewDidLoad() {
     console.log('ionViewDidLoad PhotosPage');
@@ -32,13 +35,13 @@ export class PhotosPage {
 
   async createAlbum() {
     var name = await Plugins.Modals.prompt({
-      title: 'Album Name',
+      title: 'Capacitor',
       message: ''
     });
     let ret = await Plugins.Photos.createAlbum({
       name: name.value
     });
-    console.log('Album created');
+    console.log('Capacitor album created');
   }
 
   async loadAlbums() {
@@ -100,5 +103,33 @@ export class PhotosPage {
         thumbnailBytes: photo.data.length
       });
     }
+  }
+
+  saveVideo() {
+    const fileTransfer: FileTransferObject = this.fileTransfer.create();
+    const path = this.file.dataDirectory + "capacitor-video.mp4";
+    fileTransfer
+      .download(this.videoUrl, path, true)
+      .then(async r => {
+        Plugins.Photos.getAlbums().then(async albums => {
+          const album = albums.albums.filter(
+            album => album.name.toUpperCase() === "Capacitor"
+          )[0];
+
+          Plugins.Photos.saveVideo({
+            data: r.nativeURL,
+            albumIdentifier: album && album.identifier
+          })
+            .then(r => {
+              console.log(r);
+              alert(`Success, video saved to Capacitor album`);
+            })
+            .catch(err => {
+              console.log(err);
+              alert(JSON.stringify(err));
+            });
+        });
+      })
+      .catch(console.log);
   }
 }

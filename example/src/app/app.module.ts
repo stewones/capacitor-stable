@@ -6,6 +6,8 @@ import { MyApp } from './app.component';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
+import { FileTransfer } from "@ionic-native/file-transfer";
+import { File } from "@ionic-native/file";
 
 import { Capacitor } from '@capacitor/core';
 
@@ -48,6 +50,8 @@ export class MyErrorHandler implements ErrorHandler {
   providers: [
     StatusBar,
     SplashScreen,
+    FileTransfer,
+    File,
     {provide: ErrorHandler, useClass: MyErrorHandler}
   ]
 })
