@@ -100,83 +100,98 @@ public class CAPPhotosPlugin : CAPPlugin {
     })
   }
 
-  @objc func saveVideo(_ call: CAPPluginCall) {
-    guard let data = call.getString("data") else {
-        call.error("Must provide the data path")
-        return
-    }
-    
-    let albumId = call.getString("albumIdentifier")
-    var targetCollection: PHAssetCollection?
-    
-    if albumId != nil {
-        let albumFetchResult = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: [albumId!], options: nil)
-        albumFetchResult.enumerateObjects({ (collection, count, _) in
-            targetCollection = collection
-        })
-        if targetCollection == nil {
-            call.error("Unable to find that album")
+    @objc func saveVideo(_ call: CAPPluginCall) {
+        guard let data = call.getString("data") else {
+            call.error("Must provide the data path")
             return
         }
-        if !targetCollection!.canPerform(.addContent) {
-            call.error("Album doesn't support adding content (is this a smart album?)")
+        
+        let albumId = call.getString("albumIdentifier")
+        var targetCollection: PHAssetCollection?
+        
+        if albumId != nil {
+            let albumFetchResult = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: [albumId!], options: nil)
+            albumFetchResult.enumerateObjects({ (collection, count, _) in
+                targetCollection = collection
+            })
+            if targetCollection == nil {
+                call.error("Unable to find that album")
+                return
+            }
+            if !targetCollection!.canPerform(.addContent) {
+                call.error("Album doesn't support adding content (is this a smart album?)")
+                return
+            }
+        }
+        
+        checkAuthorization(allowed: {
+            // Add it to the photo library.
+            PHPhotoLibrary.shared().performChanges({
+                let creationRequest = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: URL(string: data)!)
+                
+                if let collection = targetCollection {
+                    let addAssetRequest = PHAssetCollectionChangeRequest(for: collection)
+                    addAssetRequest?.addAssets([creationRequest?.placeholderForCreatedAsset! as Any] as NSArray)
+                }
+            }, completionHandler: {success, error in
+                if !success {
+                    call.error("Unable to save video to album", error)
+                } else {
+                    call.success()
+                }
+            })
+        }, notAllowed: {
+            call.error("Access to photos not allowed by user")
+        })
+        
+    }
+    
+    @objc func saveGif(_ call: CAPPluginCall) {
+        guard let data = call.getString("data") else {
+            call.error("Must provide the data path")
             return
         }
-    }
-    
-    PHPhotoLibrary.shared().performChanges({
-        let request = PHAssetCreationRequest.forAsset()
-        print(data)
-        request.addResource(with: .photo, fileURL: URL(string: data)!, options: nil)
-    }) { (success, error) in
-        if let error = error {
-            print(error.localizedDescription)
-        } else {
-            print("GIF has saved")
+        
+        let albumId = call.getString("albumIdentifier")
+        var targetCollection: PHAssetCollection?
+        
+        if albumId != nil {
+            let albumFetchResult = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: [albumId!], options: nil)
+            albumFetchResult.enumerateObjects({ (collection, count, _) in
+                targetCollection = collection
+            })
+            if targetCollection == nil {
+                call.error("Unable to find that album")
+                return
+            }
+            if !targetCollection!.canPerform(.addContent) {
+                call.error("Album doesn't support adding content (is this a smart album?)")
+                return
+            }
         }
-    }
-    
-    checkAuthorization(allowed: {
-        // Add it to the photo library.
-        PHPhotoLibrary.shared().performChanges({
-            let creationRequest = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: URL(string: data)!)
-            
-            if let collection = targetCollection {
-                let addAssetRequest = PHAssetCollectionChangeRequest(for: collection)
-                addAssetRequest?.addAssets([creationRequest?.placeholderForCreatedAsset! as Any] as NSArray)
-            }
-        }, completionHandler: {success, error in
-            if !success {
-                call.error("Unable to save video to album", error)
-            } else {
-                call.success()
-            }
+        
+        checkAuthorization(allowed: {
+            // Add it to the photo library.
+            PHPhotoLibrary.shared().performChanges({
+                
+                let creationRequest = PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: URL(string: data)!)
+                
+                if let collection = targetCollection {
+                    let addAssetRequest = PHAssetCollectionChangeRequest(for: collection)
+                    addAssetRequest?.addAssets([creationRequest?.placeholderForCreatedAsset! as Any] as NSArray)
+                }
+                
+            }, completionHandler: {success, error in
+                if !success {
+                    call.error("Unable to save gif to album", error)
+                } else {
+                    call.success()
+                }
+            })
+        }, notAllowed: {
+            call.error("Access to photos not allowed by user")
         })
-    }, notAllowed: {
-        call.error("Access to photos not allowed by user")
-    })
-    
-    
-//    checkAuthorization(allowed: {
-//        // Add it to the photo library.
-//        PHPhotoLibrary.shared().performChanges({
-//            let creationRequest = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: URL(string: data)!)
-//
-//            if let collection = targetCollection {
-//                let addAssetRequest = PHAssetCollectionChangeRequest(for: collection)
-//                addAssetRequest?.addAssets([creationRequest?.placeholderForCreatedAsset! as Any] as NSArray)
-//            }
-//        }, completionHandler: {success, error in
-//            if !success {
-//                call.error("Unable to save video to album", error)
-//            } else {
-//                call.success()
-//            }
-//        })
-//    }, notAllowed: {
-//        call.error("Access to photos not allowed by user")
-//    })
-  }
+    }
     
   func checkAuthorization(allowed: @escaping () -> Void, notAllowed: @escaping () -> Void) {
     let status = PHPhotoLibrary.authorizationStatus()
