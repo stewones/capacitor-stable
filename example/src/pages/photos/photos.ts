@@ -20,6 +20,9 @@ export class PhotosPage {
   photos = [];
   albums = [];
 
+  videoUrl:string = 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4';
+  videoUrlPoster:string = 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg';
+
   constructor(public navCtrl: NavController, public navParams: NavParams, public sanitizer: DomSanitizer) {
   }
 

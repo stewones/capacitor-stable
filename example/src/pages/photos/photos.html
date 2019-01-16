@@ -29,4 +29,9 @@
       <img [src]="photo.safeUrl">
     </div>
   </div>
+
+  <video  height="240" controls>
+    <source [src]="videoUrl" [poster]="videoUrlPoster" type="video/mp4">
+  Your browser does not support the video tag.
+  </video>
 </ion-content>
