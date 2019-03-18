@@ -116,20 +116,82 @@ public class Photos extends Plugin {
 
     @PluginMethod()
     public void savePhoto(PluginCall call) {
-        call.unimplemented();
+        Log.d("DEBUG LOG", "SAVE VIDEO TO ALBUM");
+        if (hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            Log.d("DEBUG LOG", "HAS PERMISSIONS");
+            _saveMedia(call, "PICTURES");
+        } else {
+            Log.d("DEBUG LOG", "NOT ALLOWED");
+            saveCall(call);
+            pluginRequestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 1986);
+        }
     }
 
     @PluginMethod()
     public void saveVideo(PluginCall call) {
-        call.unimplemented();
+        Log.d("DEBUG LOG", "SAVE VIDEO TO ALBUM");
+        if (hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            Log.d("DEBUG LOG", "HAS PERMISSIONS");
+            _saveMedia(call, "MOVIES");
+        } else {
+            Log.d("DEBUG LOG", "NOT ALLOWED");
+            saveCall(call);
+            pluginRequestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 1986);
+        }
     }
+
 
     @PluginMethod()
     public void saveGif(PluginCall call) {
-        call.unimplemented();
+        Log.d("DEBUG LOG", "SAVE GIF TO ALBUM");
+        if (hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            Log.d("DEBUG LOG", "HAS PERMISSIONS");
+            _saveMedia(call, "PICTURES");
+        } else {
+            Log.d("DEBUG LOG", "NOT ALLOWED");
+            saveCall(call);
+            pluginRequestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 1986);
+        }
     }
 
 
+    private void _saveMedia(PluginCall call, String destination) {
+        String dest;
+        if (destination == "MOVIES") {
+            dest = Environment.DIRECTORY_MOVIES;
+        }else{
+            dest = Environment.DIRECTORY_PICTURES;
+        }
+
+        Log.d("DEBUG LOG", "___SAVE MEDIA TO ALBUM");
+        String inputPath = call.getString("data");
+        if (inputPath == null) {
+            call.reject("Input file path is required");
+            return;
+        }
+
+        Uri inputUri = Uri.parse(inputPath);
+        File inputFile = new File(inputUri.getPath());
+
+        String album = call.getString("albumIdentifier");
+        File albumDir = Environment.getExternalStoragePublicDirectory(dest);
+        if (album != null) {
+            albumDir = new File(albumDir, album);
+        }
+
+        try {
+            File expFile = copyFile(inputFile, albumDir);
+            scanPhoto(expFile);
+
+            JSObject result = new JSObject();
+            result.put("filePath", expFile.toString());
+            call.resolve(result);
+
+        } catch (RuntimeException e) {
+            call.reject("RuntimeException occurred", e);
+        }
+
+    }
 
     private File copyFile (File inputFile, File albumDir) {
 
